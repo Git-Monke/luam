@@ -1,7 +1,7 @@
 local function install(args)
     if (not args[2]) then
         error({
-            message = {"A package name is required", "Corrent usage: luam <name> [version]"}
+            message = {"A package name is required", "Correct usage: luam <name> [version]"}
         })
     end
 
@@ -20,6 +20,12 @@ local function install(args)
     local package = data.package
     local main = data.main or "main.lua"
 
+    if (data.dependencies) then
+        for name, version in pairs(data.dependencies) do
+            install({"install", name, version})
+        end
+    end
+
     for key, value in pairs(package) do
         local installPath = "packages/" .. data.name .. "/" .. key .. ""
 
@@ -29,7 +35,14 @@ local function install(args)
 
         print("Installing " .. key)
         local writer = fs.open(installPath, "w")
+
+        if (key == main) then
+            writer.write('-- Automagically inserted by luam!\npackage.path = "/packages/' .. data.name ..
+                             '/?.lua;" .. package.path\n\n')
+        end
+
         writer.write(value)
+
         writer.close()
     end
 
