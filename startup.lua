@@ -1,1 +1,3 @@
-shell.setPath(shell.path() .. ":" .. "luam" .. ":" .. "executables")
+shell.setPath(shell.path() .. ":" .. "/luam")
+
+shell.setPath(shell.path() .. ":" .. "/program")

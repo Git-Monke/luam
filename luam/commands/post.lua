@@ -14,7 +14,9 @@ local function processDir(path, relPath)
         local absPath = fs.combine(path, file)
 
         if fs.isDir(absPath) then
-            mergeTables(package, processDir(absPath, file))
+            if absPath:sub(-12) ~= "luam_modules" then
+                mergeTables(package, processDir(absPath, file))
+            end
         else
             local reader = fs.open(absPath, "r")
             package[fs.combine(relPath, file)] = reader.readAll()
@@ -37,6 +39,12 @@ local function post(args)
     if (not fs.exists("luam.key")) then
         error({
             message = {"Must be logged in to post package", "Run luam help signup or luam help login for more info"}
+        })
+    end
+
+    if (not fs.exists(fs.combine(path, "package.json"))) then
+        error({
+            message = {"A package.json is required to upload a package to the registry."}
         })
     end
 
