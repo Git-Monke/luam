@@ -1,19 +1,17 @@
 local pretty = require "cc.pretty"
 
-local add = require "commands.add"
 local signup = require "commands.signup"
 local post = require "commands.post"
 local yank = require "commands.yank"
 local init = require "commands.init"
 local help = require "commands.help"
-local install = require "commands.install"
 local session = require "commands.session"
 local inc = require "commands.increaseVersion"
+local install = require "commands.install"
 
 local args = {...}
 
 local commandsTable = {
-    add = add,
     signup = signup,
     post = post,
     yank = yank,
@@ -21,10 +19,10 @@ local commandsTable = {
     help = help,
     login = session.login,
     logout = session.logout,
-    install = install,
     patch = inc.patch,
     minor = inc.minor,
-    major = inc.major
+    major = inc.major,
+    install = install
 }
 
 local helpMessage = "Run luam help for more details on proper usage"
