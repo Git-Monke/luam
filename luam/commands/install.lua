@@ -5,19 +5,21 @@ local SemVer = require ".luam.commands.utils.semver"
 local areCompatible = SemVer.checkCompatability
 local splitSemVer = SemVer.splitSemVer
 
-local function sortAlphabetically(tbl)
-    local keys = {}
+function sortTableByKeys(tbl)
+    -- stable = Sorted Table
+    local tkeys, stable = {}, {}
+
     for k in pairs(tbl) do
-        table.insert(keys, k)
+        table.insert(tkeys, k)
     end
-    table.sort(keys)
-    local i = 0
-    return function()
-        i = i + 1
-        if keys[i] then
-            return keys[i], tbl[keys[i]]
-        end
+
+    table.sort(tkeys)
+
+    for _, k in ipairs(tkeys) do
+        stable[k] = tbl[k]
     end
+
+    return stable
 end
 
 local function splitPath(path)
@@ -127,7 +129,7 @@ local function addToDepTree(packageLOCK, depTree, treeDir, package, prefix)
         local cpath = treeDirToLockLocation(firstN(treeDir, i), package.name)
 
         if (packageLOCK[cpath] and areCompatible(packageLOCK[cpath].version, prefix .. package.version)) then
-            return;
+            return true;
         end
     end
 
@@ -176,10 +178,14 @@ local function generateDepTree(packageLOCK, query, depTree, treeDir)
     local prefix = splitSemVer(version)
     local meta = getPackageMeta(name, version)
 
-    addToDepTree(packageLOCK, depTree, treeDir, metaToEntry(meta), prefix)
+    local installed = addToDepTree(packageLOCK, depTree, treeDir, metaToEntry(meta), prefix)
+
+    if (installed) then
+        return
+    end
 
     table.insert(treeDir, meta.name)
-    for name, version in sortAlphabetically(meta.dependencies) do
+    for name, version in pairs(sortTableByKeys(meta.dependencies)) do
         generateDepTree(packageLOCK, name .. "@" .. version, depTree, treeDir)
     end
     table.remove(treeDir)
@@ -226,8 +232,10 @@ local function installDepTree(root, branch, nest)
 
     for path, data in pairs(branch) do
         print("Installing " .. path .. " v" .. data.version)
-        installDependency(root .. "/" .. asPath(nest) .. "/" .. path, data.name, data.version)
-        installDepTree(root, data.nest, addToEnd(nest, path))
+
+        local newNest = addToEnd(nest, path)
+        installDependency(root .. "/" .. treeDirToLockLocation(newNest), data.name, data.version)
+        installDepTree(root, data.nest, newNest)
     end
 end
 
@@ -244,6 +252,8 @@ local function install(args)
     local packageLOCK = fs.exists(pdir .. packageLockPath) and decodeFromFile(pdir .. packageLockPath) or {}
     local packageJSON = fs.exists(pdir .. packageJsonPath) and decodeFromFile(pdir .. packageJsonPath) or {}
 
+    -- pretty.pretty_print(packageLOCK)
+
     local name, version = splitByAtSymbol(args[2])
 
     if not version then
@@ -253,14 +263,19 @@ local function install(args)
 
     local packagesToInstall = generateDepTree(packageLOCK, name .. "@" .. version)
 
-    installDepTree(pdir .. "/luam_modules", packagesToInstall)
+    if packagesToInstall then
+        installDepTree(pdir .. "/luam_modules", packagesToInstall)
+    else
+        print("Package already installed")
+        return
+    end
 
     if not packageJSON.dependencies then
         packageJSON.dependencies = {}
     end
 
     packageJSON.dependencies[name] = version
-
+    pretty.pretty_print(packageLOCK)
     fs.open(fs.combine(pdir, "package.json"), "w").write(encodePretty(packageJSON))
     fs.open(fs.combine(pdir, "package-lock.json"), "w").write(encodePretty(packageLOCK))
 end

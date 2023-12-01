@@ -62,14 +62,19 @@ function use(path)
                 end
 
                 if foundModules then
-                    break
+                    local modulesPath = fs.combine(tempPath, "luam_modules")
+                    local files = fs.list(modulesPath)
+
+                    if fs.exists(fs.combine(modulesPath .. "/" .. path[1] .. "/" .. "lib.lua")) then
+                        break
+                    end
                 end
 
                 table.remove(absPath)
             end
 
             if (#absPath == 0) then
-                error("No luam_modules folder found")
+                error("Could not find " .. path)
             end
 
             local packPath = {"luam_modules", path[1], "lib.lua"}

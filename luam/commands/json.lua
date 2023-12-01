@@ -47,13 +47,27 @@ local function encodeCommon(val, pretty, tabLevel, tTracking)
         str = str .. ("\t"):rep(tabLevel) .. s
     end
 
-    local function arrEncoding(val, bracket, closeBracket, iterator, loopFunc)
+    local function arrEncoding(val, bracket, closeBracket, sortKeys, loopFunc)
         str = str .. bracket
         if pretty then
             str = str .. "\n"
             tabLevel = tabLevel + 1
         end
-        for k, v in iterator(val) do
+
+        local keys = {}
+        if sortKeys then
+            for k in pairs(val) do
+                table.insert(keys, k)
+            end
+            table.sort(keys)
+        else
+            for k in ipairs(val) do
+                keys[#keys + 1] = k
+            end
+        end
+
+        for _, k in ipairs(keys) do
+            local v = val[k]
             tab("")
             loopFunc(k, v)
             str = str .. ","
@@ -61,6 +75,7 @@ local function encodeCommon(val, pretty, tabLevel, tTracking)
                 str = str .. "\n"
             end
         end
+
         if pretty then
             tabLevel = tabLevel - 1
         end
@@ -77,11 +92,11 @@ local function encodeCommon(val, pretty, tabLevel, tTracking)
         assert(not tTracking[val], "Cannot encode a table holding itself recursively")
         tTracking[val] = true
         if isArray(val) then
-            arrEncoding(val, "[", "]", ipairs, function(k, v)
+            arrEncoding(val, "[", "]", false, function(k, v)
                 str = str .. encodeCommon(v, pretty, tabLevel, tTracking)
             end)
         else
-            arrEncoding(val, "{", "}", pairs, function(k, v)
+            arrEncoding(val, "{", "}", true, function(k, v)
                 assert(type(k) == "string", "JSON object keys must be strings", 2)
                 str = str .. encodeCommon(k, pretty, tabLevel, tTracking)
                 str = str .. (pretty and ": " or ":") .. encodeCommon(v, pretty, tabLevel, tTracking)
