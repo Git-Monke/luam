@@ -1,7 +1,7 @@
 require ".luam.commands.json"
 
 local pretty = require "cc.pretty"
-local SemVer = require ".luam.commands.utils.semver"
+local SemVer = require ".luam.commands.install.semver"
 local areCompatible = SemVer.checkCompatability
 local splitSemVer = SemVer.splitSemVer
 
