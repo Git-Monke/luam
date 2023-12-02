@@ -1,5 +1,7 @@
-require "luam.commands.json"
-local semver = require "luam.commands.install.semver"
+require ".luam.commands.json"
+local semver = require ".luam.commands.install.semver"
+
+local pretty = require("cc.pretty")
 
 --
 --  Takes an (already parsed) package-lock.json, a target package, and its version number
@@ -14,7 +16,7 @@ local function findDependentsFromPackageJSON(packageJSON, targetPackage, targetV
     local dependents = {}
 
     for path, data in pairs(packageJSON) do
-        for name, version in pairs(pacakgeJSON.dependencies) do
+        for name, version in pairs(data.dependencies) do
             if name == targetPackage and semver.checkCompatability(version, targetVersion) then
                 table.insert(dependents, path)
             end
@@ -23,5 +25,7 @@ local function findDependentsFromPackageJSON(packageJSON, targetPackage, targetV
 
     return dependents
 end
+
+pretty.pretty_print(findDependentsFromPackageJSON(decodeFromFile("/testing/package-lock.json"), "d", "^0.1.0"))
 
 return findDependentsFromPackageJSON

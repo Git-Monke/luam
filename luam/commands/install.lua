@@ -5,6 +5,8 @@ local SemVer = require ".luam.commands.install.semver"
 local areCompatible = SemVer.checkCompatability
 local splitSemVer = SemVer.splitSemVer
 
+local findDependentsFromPackageJSON = require "commands.install.findDependents"
+
 function sortTableByKeys(tbl)
     -- stable = Sorted Table
     local tkeys, stable = {}, {}
@@ -262,8 +264,17 @@ local function install(args)
     end
 
     local packagesToInstall = generateDepTree(packageLOCK, name .. "@" .. version)
+    local existingDepenents = findDependentsFromPackageJSON(packageLOCK, name, packageLOCK[name].version)
+    local oldPackgePath;
 
     if packagesToInstall then
+        if packageJSON[name] then
+            oldPackagePath = pdir .. "/luam_modules/" .. ".holder"
+            fs.move(pdir .. "/luam_modules/" .. name, pdir .. "/luam_modules/" .. ".holder")
+            fs.delete(pdir .. "/luam_modules/")
+            packageLOCK[name] = nil
+        end
+
         installDepTree(pdir .. "/luam_modules", packagesToInstall)
     else
         print("Package already installed")
