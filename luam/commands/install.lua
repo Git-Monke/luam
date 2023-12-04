@@ -46,8 +46,7 @@ local function install(args)
 
     local pdir = findPackageDir()
     local tree = ModuleTree:new(pdir)
-
-    pretty.pretty_print(tree:findAllDependents("b", "^0.1.0"))
+    local targetPackageName, targetPackageVersion = splitByAtSymbol(args[2])
 
     local successful, err = pcall(function()
         local depTree = genDepTree(tree.lock, args[2])
@@ -55,6 +54,33 @@ local function install(args)
         if not depTree then
             print("Package already installed!")
             return;
+        end
+
+        -- A dependency tree being built means an existing version of the package we are trying to install must be incompatable with the user's query
+        if tree.lock[targetPackageName] then
+            local dependents = tree:findAllDependents(targetPackageName, tree.lock[targetPackageName].version)
+
+            if #dependents == 0 then
+                tree:deleteModule(targetPackageName)
+            else
+                tree:moveToTrash(targetPackageName)
+
+                local existingInstallations = {}
+                for _, dependent in ipairs(dependents) do
+                    local alreadyInstalled = false;
+                    for _, existingInstallation in ipairs(existingInstallations) do
+                        if dependent.path:sub(1, #existingInstallation) == existingInstallation then
+                            alreadyInstalled = true;
+                            break
+                        end
+                    end
+
+                    if not alreadyInstalled then
+                        tree:copyFromTrash(targetPackageName, dependent.path .. "/luam_modules/" .. targetPackageName)
+                        table.insert(existingInstallations, dependent.path)
+                    end
+                end
+            end
         end
 
         local packageName, version = splitByAtSymbol(args[2])

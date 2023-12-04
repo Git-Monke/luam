@@ -138,6 +138,7 @@ function ModuleTree:findModuleFromLocation(path, name, version)
     return false
 end
 
+--- Returns a list of packages that depend on the target package in the form of an indexed table of tables with properties {version, path}
 function ModuleTree:findAllDependents(packageName, packageVersion)
     local dependents = {}
 
@@ -146,7 +147,7 @@ function ModuleTree:findAllDependents(packageName, packageVersion)
             if dependency == packageName and SemVer.checkCompatability(version, packageVersion) then
                 table.insert(dependents, {
                     path = path,
-                    dependentVersion = data.dependencies[packageName]
+                    version = data.dependencies[packageName]
                 })
             end
         end
@@ -214,7 +215,7 @@ function ModuleTree:copyFromTrash(path, copyIntoPath)
     local newPath = self.packagePath .. "/luam_modules/" .. copyIntoPath
 
     self.lock[copyIntoPath] = self.trash[path]
-
+    print(oldPath, newPath)
     fs.copy(oldPath, newPath)
 
     table.insert(self.fileRecord, {
