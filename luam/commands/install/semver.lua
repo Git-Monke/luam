@@ -5,6 +5,8 @@ local function splitSemVer(ver)
         return ""
     end
 
+    assert(type(ver) == "string", "The passed in version was not a string")
+
     local prefix, major, minor, patch = ver:match("^([~^]?)(%d+)%.(%d+)%.(%d+)")
     return prefix, {tonumber(major), tonumber(minor), tonumber(patch)}
 end

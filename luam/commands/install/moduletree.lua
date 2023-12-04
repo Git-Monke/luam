@@ -100,23 +100,35 @@ function ModuleTree:commitChanges()
     fs.delete(self.packagePath .. "/luam_modules/.trash")
 end
 
-function ModuleTree:findInstallLocation(nest, packageName, packageVersion)
-    local cpath = nest[1]
+--- Returns if the module even needs to be installed, and if so the valid installation location
+-- For nest = {a, b} installing d, the search order will be as follows:
+-- d, a/luam_modules/d, a/luam_modules/b/luam_modules/d etc.
+function ModuleTree:findInstallationLocation(nest, packageName, packageVersion)
+    local cpath = packageName
 
     if not self.lock[cpath] then
-        return cpath
+        return true, cpath
     end
 
-    for i = 2, #nest do
-        cpath = cpath .. "/luam_modules/" .. nest[i]
+    if self.lock[cpath] and SemVer.checkCompatability(self.lock[cpath].version, packageVersion) then
+        return false
+    end
+
+    for i = 1, #nest do
+        cpath = nest[i] .. "/luam_modules/" .. cpath
 
         if not self.lock[cpath] then
-            return cpath
+            print("Is this happening")
+            return true, cpath
+        end
+
+        if self.lock[cpath] and SemVer.checkCompatability(self.lock[cpath].version, packageVersion) then
+            return false
         end
     end
 
     error({
-        message = {"No viable installation location"}
+        message = {"No valid installation location."}
     })
 end
 
@@ -164,6 +176,13 @@ function ModuleTree:moveToTrash(path)
     self.trash[path] = self.lock[path]
     self.lock[path] = nil
 
+    for modpath, data in pairs(self.lock) do
+        if modpath:sub(1, #path) == path then
+            self.trash[modpath] = data
+            self.lock[modpath] = nil
+        end
+    end
+
     fs.move(oldPath, trashPath)
 
     table.insert(self.fileRecord, {
@@ -194,12 +213,7 @@ function ModuleTree:deleteModule(path)
 
     self:moveToTrash(path)
 
-    for modpath, _ in pairs(self.lock) do
-        if modpath:sub(1, #path) == path then
-            self.lock[modpath] = nil
-        end
-    end
-
+    -- Attempts to delete all dependencies
     for dependency, version in pairs(meta.dependencies) do
         local foundPackage, packagePath = self:findModuleFromLocation(path, dependency, version)
 
@@ -211,17 +225,27 @@ end
 
 -- Warning: Does not check if it will overwrite a file. 
 function ModuleTree:copyFromTrash(path, copyIntoPath)
+    assert(path, "No path to copy from was provided")
+    assert(copyIntoPath, "No path to copy into was provided")
+
     local oldPath = self.packagePath .. "/luam_modules/.trash/" .. path
     local newPath = self.packagePath .. "/luam_modules/" .. copyIntoPath
 
     self.lock[copyIntoPath] = self.trash[path]
-    print(oldPath, newPath)
+
     fs.copy(oldPath, newPath)
 
     table.insert(self.fileRecord, {
         operation = "copy",
         copiedFilePath = newPath
     })
+end
+
+--- Copies a directory from trash and then deletes its luam_modules folder
+function ModuleTree:copyFromTrashExcludingSubmodules(path, copyIntoPath)
+    self:copyFromTrash(path, copyIntoPath)
+    print(self.packagePath .. "/luam_modules/" .. copyIntoPath .. "/luam_modules")
+    fs.delete(self.packagePath .. "/luam_modules/" .. copyIntoPath .. "/luam_modules")
 end
 
 --- Tells the ModuleTree a new directory is created (allowing for reverting in case of errors)
@@ -272,6 +296,7 @@ function ModuleTree:installModule(path, name, version)
 
     for filePath, fileData in pairs(data.package) do
         if not (filePath == "package.json" or filePath == "package-lock.json") then
+            print("   => Unpacking " .. filePath)
             local writer = fs.open(self.packagePath .. "/luam_modules/" .. path .. "/" .. filePath, "w")
             writer.write(fileData)
             writer.close()
