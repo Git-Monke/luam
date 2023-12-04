@@ -47,6 +47,8 @@ local function install(args)
     local pdir = findPackageDir()
     local tree = ModuleTree:new(pdir)
 
+    pretty.pretty_print(tree:findAllDependents("b", "^0.1.0"))
+
     local successful, err = pcall(function()
         local depTree = genDepTree(tree.lock, args[2])
 
@@ -55,7 +57,12 @@ local function install(args)
             return;
         end
 
-        tree.package.dependencies[args[2]] = depTree[args[2]].version
+        local packageName, version = splitByAtSymbol(args[2])
+        version = version or depTree[packageName].version
+
+        local preExistingPackage = tree.lock[packageName]
+
+        tree.package.dependencies[packageName] = version or "^" .. depTree[packageName].version
 
         for path, package in pairs(depTree) do
             tree:installModule(path, package.name, package.version)

@@ -144,7 +144,10 @@ function ModuleTree:findAllDependents(packageName, packageVersion)
     for path, data in pairs(self.lock) do
         for dependency, version in pairs(data.dependencies) do
             if dependency == packageName and SemVer.checkCompatability(version, packageVersion) then
-                table.insert(dependents, path)
+                table.insert(dependents, {
+                    path = path,
+                    dependentVersion = data.dependencies[packageName]
+                })
             end
         end
     end
