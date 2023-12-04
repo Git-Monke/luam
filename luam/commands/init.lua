@@ -2,7 +2,7 @@ require "commands.json"
 
 local function init(args, path)
     local name;
-    local type = "--exe"
+    local type = "--lib"
 
     if (#args == 2) then
         name = args[2]

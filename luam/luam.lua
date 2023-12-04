@@ -14,7 +14,6 @@ local args = {...}
 local commandsTable = {
     signup = signup,
     post = post,
-    yank = yank,
     init = init,
     help = help,
     login = session.login,
