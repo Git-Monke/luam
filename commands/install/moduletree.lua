@@ -1,5 +1,5 @@
 require "commands.json"
-local SemVer = require "commands.install.semver"
+local SemVer = require ".luam.commands.install.semver"
 local getPackage = require "commands.install.getpackage"
 
 local pretty = require "cc.pretty"
@@ -84,6 +84,10 @@ function ModuleTree:new(packageDir)
 
     new.fileRecord = {}
 
+    if not new.package.dependencies then
+        new.package.dependencies = {}
+    end
+
     return new
 end
 
@@ -128,7 +132,7 @@ function ModuleTree:findInstallationLocation(nest, packageName, packageVersion)
     end
 
     error({
-        message = {"No valid installation location."}
+        message = { "No valid installation location." }
     })
 end
 
@@ -223,7 +227,7 @@ function ModuleTree:deleteModule(path)
     end
 end
 
--- Warning: Does not check if it will overwrite a file. 
+-- Warning: Does not check if it will overwrite a file.
 function ModuleTree:copyFromTrash(path, copyIntoPath)
     assert(path, "No path to copy from was provided")
     assert(copyIntoPath, "No path to copy into was provided")
@@ -282,7 +286,7 @@ function ModuleTree:installModule(path, name, version)
 
     if code == 404 then
         error({
-            message = {"404 Module Not Found"}
+            message = { "404 Module Not Found" }
         })
     end
 

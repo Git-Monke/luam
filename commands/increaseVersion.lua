@@ -16,7 +16,7 @@ local function open()
     local path = fs.combine(dir, "package.json")
     if not fs.exists(path) then
         error({
-            message = {"No package.json found in directory"}
+            message = { "No package.json found in directory" }
         })
     end
     return decodeFromFile(path)

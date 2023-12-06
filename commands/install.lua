@@ -1,7 +1,7 @@
 local ModuleTree = require "commands.install.moduletree"
 local genDepTree = require "commands.install.gendeptree"
 local getPackage = require "commands.install.getpackage"
-local SemVer = require "commands.install.semver"
+local SemVer = require ".luam.commands.install.semver"
 
 local pretty = require "cc.pretty"
 
@@ -83,7 +83,7 @@ end
 local function install(args)
     if #args < 2 then
         error({
-            message = {"At least 1 argument expected", "Correct usage: luam install <package>[@version]"}
+            message = { "At least 1 argument expected", "Correct usage: luam install <package>[@version]" }
         })
     end
 
@@ -143,7 +143,7 @@ local function install(args)
 
         local preExistingPackage = tree.lock[packageName]
 
-        tree.package.dependencies[packageName] = version or "^" .. depTree[packageName].version
+        tree.package.dependencies[packageName] = version or ("^" .. depTree[packageName].version)
 
         for path, package in pairs(depTree) do
             print("Installing " .. path .. " v" .. package.version)
