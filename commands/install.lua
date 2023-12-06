@@ -94,6 +94,11 @@ local function install(args)
     local successful, err = pcall(function()
         if not targetPackageVersion then
             local meta = getPackage(targetPackageName, nil, true)
+
+            if not meta then
+                error({ message = { "The Luam registry was unable to find package " .. targetPackageName } })
+            end
+
             targetPackageVersion = meta.version
         end
 

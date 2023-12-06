@@ -14,7 +14,7 @@ local function processDir(path, relPath)
         local absPath = fs.combine(path, file)
 
         if fs.isDir(absPath) then
-            if absPath:sub(-12) ~= "luam_modules" then
+            if file:sub(-12) ~= "luam_modules" and file ~= ".git" then
                 mergeTables(package, processDir(absPath, file))
             end
         else
@@ -32,19 +32,19 @@ local function post(args)
 
     if (not fs.isDir(path)) then
         error({
-            message = {"Invalid directory!"}
+            message = { "Invalid directory!" }
         })
     end
 
     if (not fs.exists("luam.key")) then
         error({
-            message = {"Must be logged in to post package", "Run luam help signup or luam help login for more info"}
+            message = { "Must be logged in to post package", "Run luam help signup or luam help login for more info" }
         })
     end
 
     if (not fs.exists(fs.combine(path, "package.json"))) then
         error({
-            message = {"A package.json is required to upload a package to the registry."}
+            message = { "A package.json is required to upload a package to the registry." }
         })
     end
 
@@ -66,8 +66,8 @@ local function post(args)
 
     if (errMessage) then
         error({
-            message = {failedResponse.getResponseCode() .. " " ..
-                textutils.unserialiseJSON(failedResponse.readAll()).message}
+            message = { failedResponse.getResponseCode() .. " " ..
+            textutils.unserialiseJSON(failedResponse.readAll()).message }
         })
     end
 

@@ -1,3 +1,5 @@
+require ".tableutils.lib"
+
 local function join(version, meta)
     if version and not meta then
         return "?version=" .. version
@@ -13,12 +15,12 @@ end
 
 local function getPackage(name, version, metaonly)
     local handler, errMessage, failedResponse = http.get("http://localhost:3000/packages/" .. name ..
-                                                             join(version, metaonly))
+        join(version, metaonly))
 
     if (errMessage) then
         if not failedResponse then
             error({
-                message = {"Server is down. Please try again later!"}
+                message = { "Server is down. Please try again later!" }
             })
         end
 
