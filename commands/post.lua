@@ -30,23 +30,23 @@ end
 local function post(args)
     local path = args[2] or shell.dir()
 
-    if (not fs.isDir(path)) then
-        error({
-            message = { "Invalid directory!" }
-        })
-    end
+    -- if (not fs.isDir(path)) then
+    --     error({
+    --         message = { "Invalid directory!" }
+    --     })
+    -- end
 
-    if (not fs.exists("luam.key")) then
-        error({
-            message = { "Must be logged in to post package", "Run luam help signup or luam help login for more info" }
-        })
-    end
+    -- if (not fs.exists("luam.key")) then
+    --     error({
+    --         message = { "Must be logged in to post package", "Run luam help signup or luam help login for more info" }
+    --     })
+    -- end
 
-    if (not fs.exists(fs.combine(path, "package.json"))) then
-        error({
-            message = { "A package.json is required to upload a package to the registry." }
-        })
-    end
+    -- if (not fs.exists(fs.combine(path, "package.json"))) then
+    --     error({
+    --         message = { "A package.json is required to upload a package to the registry." }
+    --     })
+    -- end
 
     local reader = fs.open("luam.key", "r")
     local authKey = reader.readAll()
@@ -54,22 +54,24 @@ local function post(args)
 
     local package = processDir(path, "");
 
-    local body = {
-        data = package,
-        authKey = authKey
-    }
+    fs.open("tableutils-json.json", "w").write(textutils.serialiseJSON(package))
 
-    local response, errMessage, failedResponse = http.post("http://localhost:3000/packages",
-        textutils.serialiseJSON(body), {
-            ["Content-Type"] = "application/json"
-        })
+    -- local body = {
+    --     data = package,
+    --     authKey = authKey
+    -- }
 
-    if (errMessage) then
-        error({
-            message = { failedResponse.getResponseCode() .. " " ..
-            textutils.unserialiseJSON(failedResponse.readAll()).message }
-        })
-    end
+    -- local response, errMessage, failedResponse = http.post("http://localhost:3000/packages",
+    --     textutils.serialiseJSON(body), {
+    --         ["Content-Type"] = "application/json"
+    --     })
+
+    -- if (errMessage) then
+    --     error({
+    --         message = { failedResponse.getResponseCode() .. " " ..
+    --         textutils.unserialiseJSON(failedResponse.readAll()).message }
+    --     })
+    -- end
 
     print("Package posted to registry successfully!")
 end

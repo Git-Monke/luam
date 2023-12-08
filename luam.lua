@@ -9,7 +9,7 @@ local session = require "commands.session"
 local inc = require "commands.increaseVersion"
 local install = require "commands.install"
 
-local args = {...}
+local args = { ... }
 
 local commandsTable = {
     signup = signup,
@@ -29,7 +29,7 @@ local helpMessage = "Run luam help for more details on proper usage"
 function main()
     if #args < 1 then
         error({
-            message = {"At least one argument should be provided!", helpMessage}
+            message = { "At least one argument should be provided!", helpMessage }
         })
     end
 
@@ -37,7 +37,7 @@ function main()
         commandsTable[args[1]](args)
     else
         error({
-            message = {args[1] .. " is not a valid command!", helpMessage}
+            message = { args[1] .. " is not a valid command!", helpMessage }
         })
     end
 end

@@ -105,8 +105,8 @@ local function generateDepTree(packageLOCK, query, depTree, treeDir)
             -- TODO: Allow users to link a github repository to their packages so users of faulty packages
             -- TODO: Can be redirected to them.
             error({
-                message = {treeDirToLockLocation(treeDir) .. " depends on " .. query ..
-                    " which was unable to be found in the registry."}
+                message = { treeDirToLockLocation(treeDir) .. " depends on " .. query ..
+                " which was unable to be found in the registry." }
             })
         end
     end
